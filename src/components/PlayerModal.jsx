@@ -2964,7 +2964,7 @@ export default function PlayerModal({ item, onClose, preferredServerId, isHindiP
                   loading="eager"
                   importance="high"
                   referrerPolicy="no-referrer-when-downgrade"
-                  sandbox="allow-scripts allow-same-origin allow-forms allow-presentation"
+                  sandbox={shieldMode === 'strict' && adShieldActive ? "allow-scripts allow-same-origin allow-forms allow-presentation" : undefined}
                   allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share; fullscreen"
                   allowFullScreen
                 />
