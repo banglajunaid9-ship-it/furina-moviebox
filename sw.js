@@ -1,5 +1,5 @@
 // Furina MovieBox Service Worker — PWA & Offline App Shell
-const CACHE_NAME = 'furina-moviebox-v16-lucifer-multidub-fix';
+const CACHE_NAME = 'furina-moviebox-v18-master-fix';
 const STATIC_ASSETS = [
   './manifest.json',
   './favicon.svg',
