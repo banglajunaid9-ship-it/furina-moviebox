@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { 
   X, Play, Star, Bookmark, Check, Sparkles, Film, Tv, Clock, 
-  Calendar, Globe, ShieldCheck, Download, ChevronRight, Layers 
+  Calendar, Globe, ShieldCheck, Download, ChevronRight, Layers, Share2 
 } from 'lucide-react';
+import soundFx from '../services/soundFx';
 import { resolveBackdropUrl, resolvePosterUrl, extractGenres } from '../services/contentModel';
 import { fetchSeasonEpisodes, fetchTvDetails, isHindiAvailable } from '../services/tmdb';
 
@@ -20,6 +21,37 @@ export default function MediaDetailsModal({
   const [selectedSeason, setSelectedSeason] = useState(1);
   const [totalSeasons, setTotalSeasons] = useState(item.seasons || 1);
   const [loadingEpisodes, setLoadingEpisodes] = useState(false);
+  const [copied, setCopied] = useState(false);
+
+  const handleShare = async () => {
+    try {
+      const baseUrl = window.location.origin + window.location.pathname;
+      const mediaType = isSeries ? 'tv' : 'movie';
+      const rawTitle = title || item?.title || item?.name || '';
+      const slug = rawTitle.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
+      const cleanUrl = `${baseUrl}?watch=${item.id}&type=${mediaType}${slug ? `&title=${slug}` : ''}`;
+      
+      try {
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+          await navigator.clipboard.writeText(cleanUrl);
+        } else {
+          throw new Error('Fallback');
+        }
+      } catch (err) {
+        const ta = document.createElement('textarea');
+        ta.value = cleanUrl;
+        ta.style.position = 'fixed';
+        ta.style.opacity = '0';
+        document.body.appendChild(ta);
+        ta.select();
+        document.execCommand('copy');
+        document.body.removeChild(ta);
+      }
+      soundFx.playWaterDrop?.();
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2400);
+    } catch (e) {}
+  };
 
   const title = item.title || item.name || 'Untitled';
   const year = item.year || String(item.release_date || item.first_air_date || '').substring(0, 4) || '2024';
@@ -185,6 +217,15 @@ export default function MediaDetailsModal({
               >
                 {saved ? <Check className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-cyan-400" /> : <Bookmark className="w-3.5 h-3.5 sm:w-4 sm:h-4" />}
                 <span>{saved ? 'Saved' : 'Watchlist'}</span>
+              </button>
+
+              <button
+                onClick={handleShare}
+                title="Copy clean 4K link to share"
+                className="flex items-center gap-1.5 px-3 py-2 sm:px-3.5 sm:py-2.5 rounded-xl text-xs sm:text-sm font-bold transition border bg-[#08122c] hover:bg-cyan-500/20 border-cyan-500/30 hover:border-cyan-400 text-cyan-200 hover:text-white cursor-pointer"
+              >
+                {copied ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Share2 className="w-3.5 h-3.5 text-cyan-400" />}
+                <span>{copied ? 'Copied ✨' : 'Share'}</span>
               </button>
             </div>
           </div>

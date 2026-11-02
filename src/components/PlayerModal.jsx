@@ -3,7 +3,8 @@ import {
   X, Server, Film, Tv, RefreshCw, ExternalLink, Info, Zap, Play, Pause,
   Sparkles, ShieldCheck, Download, Maximize2, Minimize2, Volume2,
   CheckCircle2, AlertTriangle, ArrowRight, Loader2, ChevronLeft, ChevronRight,
-  PictureInPicture, Keyboard, Subtitles, Users, FastForward, ChevronDown
+  PictureInPicture, Keyboard, Subtitles, Users, FastForward, ChevronDown,
+  Share2, Copy, Check
 } from 'lucide-react';
 import { SERVERS, getStreamUrl, getDownloadUrl } from '../services/streaming';
 import { 
@@ -354,6 +355,7 @@ export default function PlayerModal({ item, onClose, preferredServerId, isHindiP
   const savedPlaybackTimeRef = useRef(0);
   const savedVolumeRef = useRef(1);
   const savedMutedRef = useRef(false);
+  const [shareToast, setShareToast] = useState(false);
 
   // Episodes & Season State with Watch Progress Persistence
   const getSavedProgress = () => {
@@ -379,6 +381,39 @@ export default function PlayerModal({ item, onClose, preferredServerId, isHindiP
   const [isLoadingEpisodes, setIsLoadingEpisodes] = useState(false);
   const [reloadKey, setReloadKey] = useState(0);
   const handleReload = () => setReloadKey((k) => k + 1);
+
+  // 1-Tap Clean Share Link Generator
+  const handleShareCleanLink = useCallback(async () => {
+    try {
+      const baseUrl = window.location.origin + window.location.pathname;
+      const mediaType = isSeries ? 'tv' : 'movie';
+      const rawTitle = title || item?.title || item?.name || '';
+      const slug = rawTitle.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
+      const cleanUrl = `${baseUrl}?watch=${item?.id || ''}&type=${mediaType}${isSeries ? `&s=${season}&e=${episode}` : ''}${slug ? `&title=${slug}` : ''}`;
+      
+      try {
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+          await navigator.clipboard.writeText(cleanUrl);
+        } else {
+          throw new Error('Clipboard API unavailable');
+        }
+      } catch (clipErr) {
+        const ta = document.createElement('textarea');
+        ta.value = cleanUrl;
+        ta.style.position = 'fixed';
+        ta.style.opacity = '0';
+        document.body.appendChild(ta);
+        ta.select();
+        document.execCommand('copy');
+        document.body.removeChild(ta);
+      }
+      soundFx.playWaterDrop?.();
+      setShareToast(true);
+      setTimeout(() => setShareToast(false), 2600);
+    } catch (e) {
+      console.error('Failed to copy clean stream link:', e);
+    }
+  }, [item, isSeries, season, episode, title]);
 
   // Filter servers: Hanime/mature content is strictly NOT hosted on VidLink (causes Next.js 500)
   // and AutoEmbed returns 404 Content Not Found on mature/vault titles (e.g. TMDB 1033051)
@@ -1702,6 +1737,16 @@ export default function PlayerModal({ item, onClose, preferredServerId, isHindiP
                 </div>
               )}
 
+              {/* Fullscreen Share Clean Link Button */}
+              <button
+                onClick={handleShareCleanLink}
+                title="Copy Clean 4K Stream Link to Share"
+                className="p-2 sm:px-3 sm:py-2 rounded-xl bg-cyan-500/20 hover:bg-cyan-500/40 text-cyan-200 border border-cyan-400/50 flex items-center gap-1.5 transition text-xs font-bold cursor-pointer shadow-sm"
+              >
+                <Share2 className="w-3.5 h-3.5 text-cyan-300" />
+                <span className="hidden md:inline">Share 4K</span>
+              </button>
+
               <button
                 onClick={handleReload}
                 title="Reload Stream"
@@ -1935,6 +1980,17 @@ export default function PlayerModal({ item, onClose, preferredServerId, isHindiP
               >
                 <Users className="w-3.5 h-3.5" />
                 <span className="hidden sm:inline">Sync Room</span>
+              </button>
+
+              {/* Clean 4K Direct Share Link Button */}
+              <button
+                data-testid="share-stream-btn"
+                onClick={handleShareCleanLink}
+                title="Copy clean 4K stream link to clipboard"
+                className="flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-xl bg-gradient-to-r from-cyan-500/25 to-blue-500/25 hover:from-cyan-500/40 hover:to-blue-500/40 border border-cyan-400/50 text-cyan-200 hover:text-white text-xs font-extrabold transition shadow-sm cursor-pointer shrink-0"
+              >
+                <Share2 className="w-3.5 h-3.5 text-cyan-300" />
+                <span className="hidden sm:inline">Share 4K</span>
               </button>
 
               {/* Open stream in clean external window */}
@@ -3338,6 +3394,15 @@ export default function PlayerModal({ item, onClose, preferredServerId, isHindiP
           }
         }}
       />
+      {/* Fontaine Hydro Clean Link Copied Toast Notification */}
+      {shareToast && (
+        <div className="fixed top-8 left-1/2 -translate-x-1/2 z-[100] px-4 py-2.5 rounded-2xl bg-[#06112d]/95 border-2 border-cyan-400 text-cyan-100 shadow-[0_12px_40px_rgba(0,242,254,0.55)] backdrop-blur-2xl flex items-center gap-2.5 text-xs sm:text-sm font-black animate-fade-in pointer-events-none">
+          <div className="w-6 h-6 rounded-full bg-cyan-400/20 border border-cyan-300 flex items-center justify-center">
+            <Sparkles className="w-3.5 h-3.5 text-cyan-300 animate-spin" />
+          </div>
+          <span>✨ Direct 4K Stream Link copied to clipboard!</span>
+        </div>
+      )}
     </div>
   );
 }

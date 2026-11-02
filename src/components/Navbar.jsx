@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Search, Film, Tv, Flame, Heart, Sparkles, X, Shield, Lock, Settings, Smartphone, Skull, Volume2, VolumeX, Command, Disc, Zap } from 'lucide-react';
+import { Search, Film, Tv, Flame, Heart, Sparkles, X, Shield, Lock, Settings, Smartphone, Skull, Volume2, VolumeX, Command, Disc, Zap, Share2, Check } from 'lucide-react';
 import soundFx from '../services/soundFx';
 
 export function HanimeIcon({ className = "w-3.5 h-3.5 sm:w-4 sm:h-4", ...props }) {
@@ -69,6 +69,7 @@ export default function Navbar({
 
   const [localSearch, setLocalSearch] = useState(searchQuery || '');
   const [isSoundOn, setIsSoundOn] = useState(() => !soundFx.isMuted());
+  const [shareCopied, setShareCopied] = useState(false);
   const inputRef = useRef(null);
   const isFocusedRef = useRef(false);
   const isComposingRef = useRef(false);
@@ -379,6 +380,23 @@ export default function Navbar({
             <span className="hidden sm:inline text-[11px] font-semibold">
               {isLowSpecMode ? 'Eco ON' : 'Eco Mode'}
             </span>
+          </button>
+
+          {/* Quick Share Clean App Link */}
+          <button
+            onClick={async () => {
+              try {
+                await navigator.clipboard.writeText(window.location.href);
+                soundFx.playWaterDrop?.();
+                setShareCopied(true);
+                setTimeout(() => setShareCopied(false), 2200);
+              } catch (e) {}
+            }}
+            title="Copy Clean Share Link"
+            className="p-1.5 sm:px-2.5 sm:py-1 rounded-full border border-cyan-500/35 bg-[#091535] hover:bg-cyan-500/20 text-cyan-300 hover:text-white transition flex items-center gap-1 text-[10px] sm:text-[11px] font-bold cursor-pointer shrink-0"
+          >
+            {shareCopied ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Share2 className="w-3.5 h-3.5 text-cyan-400" />}
+            <span className="hidden xl:inline">{shareCopied ? 'Copied ✨' : 'Share'}</span>
           </button>
 
           <button

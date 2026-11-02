@@ -79,12 +79,41 @@ function getContinueWatchingList() {
 }
 
 export default function App() {
-  const [activeCategory, setActiveCategory] = useState('trending');
+  const [activeCategory, setActiveCategory] = useState(() => {
+    try {
+      if (typeof window !== 'undefined') {
+        const params = new URLSearchParams(window.location.search || (window.location.hash.includes('?') ? window.location.hash.slice(window.location.hash.indexOf('?')) : ''));
+        const tab = params.get('tab') || params.get('cat') || params.get('category');
+        if (tab && ['trending', 'new_movies', 'moviebox', 'hollywood', 'hindi', 'kdrama', 'anime', 'horror', 'series', 'watchlist', 'mature', 'ecchi_anime'].includes(tab)) {
+          return tab;
+        }
+      }
+    } catch (e) {}
+    return 'trending';
+  });
   const [animeAudioFilter, setAnimeAudioFilter] = useState('all');
   const [movieFilter, setMovieFilter] = useState('hollywood');
   const [kdramaFilter, setKdramaFilter] = useState('all');
-  const [searchQuery, setSearchQuery] = useState('');
-  const [debouncedQuery, setDebouncedQuery] = useState('');
+  const [searchQuery, setSearchQuery] = useState(() => {
+    try {
+      if (typeof window !== 'undefined') {
+        const params = new URLSearchParams(window.location.search || (window.location.hash.includes('?') ? window.location.hash.slice(window.location.hash.indexOf('?')) : ''));
+        const q = params.get('q') || params.get('search');
+        if (q && q.trim()) return q.trim();
+      }
+    } catch (e) {}
+    return '';
+  });
+  const [debouncedQuery, setDebouncedQuery] = useState(() => {
+    try {
+      if (typeof window !== 'undefined') {
+        const params = new URLSearchParams(window.location.search || (window.location.hash.includes('?') ? window.location.hash.slice(window.location.hash.indexOf('?')) : ''));
+        const q = params.get('q') || params.get('search');
+        if (q && q.trim()) return q.trim();
+      }
+    } catch (e) {}
+    return '';
+  });
   
   // Instant Cache & Hydration: Fresh TTL cache ensures modern UI without stale historical data
   const [items, setItems] = useState(() => {
@@ -128,7 +157,27 @@ export default function App() {
   const [error, setError] = useState(null);
   const [retryCount, setRetryCount] = useState(0);
   const [page, setPage] = useState(1);
-  const [activeMedia, setActiveMedia] = useState(null);
+  const [activeMedia, setActiveMedia] = useState(() => {
+    try {
+      if (typeof window === 'undefined') return null;
+      const searchStr = window.location.search || (window.location.hash.includes('?') ? window.location.hash.slice(window.location.hash.indexOf('?')) : '');
+      const params = new URLSearchParams(searchStr);
+      const urlWatch = params.get('watch') || params.get('id') || params.get('media');
+      const urlType = params.get('type') || (params.get('s') || params.get('season') ? 'tv' : 'movie');
+      const urlTitle = params.get('title') ? decodeURIComponent(params.get('title')).replace(/-/g, ' ') : '';
+      if (urlWatch) {
+        const numId = Number(urlWatch);
+        return {
+          id: numId || urlWatch,
+          title: urlTitle || (urlType === 'tv' ? 'TV Series' : 'Movie'),
+          name: urlTitle || (urlType === 'tv' ? 'TV Series' : 'Movie'),
+          media_type: urlType,
+          isHindiDubbed: isHindiAvailable({ id: numId || urlWatch })
+        };
+      }
+    } catch (e) {}
+    return null;
+  });
 
   const setSafeActiveMedia = useCallback((media) => {
     if (!media) {
@@ -275,17 +324,30 @@ export default function App() {
     return () => { cancelled = true; };
   }, []);
 
-  // Handle direct player URL navigation (e.g., /player?id=1423191&type=movie&server=0 or ?id=1423191)
+  // Handle direct clean URL navigation (e.g. ?watch=63174&type=tv&title=lucifer or ?tab=hindi or ?q=deadpool)
   useEffect(() => {
     try {
       if (typeof window === 'undefined') return;
       const searchStr = window.location.search || (window.location.hash.includes('?') ? window.location.hash.slice(window.location.hash.indexOf('?')) : '');
       const params = new URLSearchParams(searchStr);
-      const urlId = params.get('id');
-      const urlType = params.get('type') || 'movie';
+      
+      const urlWatch = params.get('watch') || params.get('id') || params.get('media');
+      const urlType = params.get('type') || (params.get('s') || params.get('season') ? 'tv' : 'movie');
+      const urlTitle = params.get('title') ? decodeURIComponent(params.get('title')).replace(/-/g, ' ') : '';
       const urlServer = params.get('server');
-      if (urlId) {
-        const numId = Number(urlId);
+      const urlTab = params.get('tab') || params.get('cat') || params.get('category');
+      const urlQuery = params.get('q') || params.get('search');
+
+      if (urlTab && ['trending', 'new_movies', 'moviebox', 'hollywood', 'hindi', 'kdrama', 'anime', 'horror', 'series', 'watchlist', 'mature', 'ecchi_anime'].includes(urlTab)) {
+        setActiveCategory(urlTab);
+      }
+
+      if (urlQuery && urlQuery.trim()) {
+        setSearchQuery(urlQuery.trim());
+      }
+
+      if (urlWatch) {
+        const numId = Number(urlWatch);
         const isResidentEvil = numId === 1423191;
         const matchedItem = isResidentEvil ? {
           id: 1423191,
@@ -300,9 +362,11 @@ export default function App() {
         } : (
           CURATED_HOLLYWOOD_HINDI_DUBS.find((m) => Number(m.id) === numId) ||
           CURATED_HOLLYWOOD_BLOCKBUSTERS.find((m) => Number(m.id) === numId) || {
-            id: numId || urlId,
+            id: numId || urlWatch,
+            title: urlTitle || (urlType === 'tv' ? 'TV Series' : 'Movie'),
+            name: urlTitle || (urlType === 'tv' ? 'TV Series' : 'Movie'),
             media_type: urlType,
-            isHindiDubbed: isHindiAvailable({ id: numId || urlId })
+            isHindiDubbed: isHindiAvailable({ id: numId || urlWatch })
           }
         );
         setSafeActiveMedia(matchedItem);
@@ -310,11 +374,58 @@ export default function App() {
           const srvIdx = parseInt(urlServer, 10);
           if (!isNaN(srvIdx) && SERVERS[srvIdx]) {
             setPreferredServer(SERVERS[srvIdx].id);
+          } else if (SERVERS.some(s => s.id === urlServer)) {
+            setPreferredServer(urlServer);
           }
         }
       }
     } catch (e) {}
   }, []);
+
+  // Clean URL Two-Way Synchronization (Auto-updates browser URL for instant sharing & bookmarking)
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    try {
+      const params = new URLSearchParams();
+
+      if (activeMedia) {
+        params.set('watch', activeMedia.id);
+        const mediaType = activeMedia.media_type || (activeMedia.first_air_date ? 'tv' : 'movie');
+        if (mediaType === 'tv') params.set('type', 'tv');
+        const rawTitle = activeMedia.title || activeMedia.name || '';
+        const slug = rawTitle
+          .toLowerCase()
+          .replace(/[^a-z0-9]+/g, '-')
+          .replace(/(^-|-$)/g, '');
+        if (slug) params.set('title', slug);
+      } else if (debouncedQuery && debouncedQuery.trim()) {
+        params.set('q', debouncedQuery.trim());
+      } else if (activeCategory && activeCategory !== 'trending') {
+        params.set('tab', activeCategory);
+      }
+
+      const queryString = params.toString();
+      const currentQuery = window.location.search.replace(/^\?/, '');
+      if (currentQuery !== queryString) {
+        const newPath = queryString 
+          ? `${window.location.pathname}?${queryString}`
+          : window.location.pathname;
+        window.history.replaceState({ furinaApp: true }, '', newPath);
+      }
+    } catch (e) {}
+  }, [activeMedia, debouncedQuery, activeCategory]);
+
+  // Handle browser back button (Popstate) to gracefully close open modals
+  useEffect(() => {
+    const handlePopState = () => {
+      const params = new URLSearchParams(window.location.search);
+      if (!params.get('watch') && !params.get('id')) {
+        if (activeMedia) setActiveMedia(null);
+      }
+    };
+    window.addEventListener('popstate', handlePopState);
+    return () => window.removeEventListener('popstate', handlePopState);
+  }, [activeMedia]);
 
   const handleRetry = useCallback(() => {
     setError(null);

@@ -1,5 +1,5 @@
 import React, { useState, useRef, useCallback } from 'react';
-import { Play, Star, Bookmark, Check, Sparkles, Volume2, Film, Tv, Info } from 'lucide-react';
+import { Play, Star, Bookmark, Check, Sparkles, Volume2, Film, Tv, Info, Share2 } from 'lucide-react';
 import { isHindiAvailable } from '../services/tmdb';
 import { resolvePosterUrl } from '../services/contentModel';
 import soundFx from '../services/soundFx';
@@ -270,6 +270,26 @@ const MediaCard = React.memo(function MediaCard({
               <Info className="w-4 h-4 bounce-hover" />
             </button>
           )}
+
+          <button
+            onClick={async (e) => {
+              e.stopPropagation();
+              try {
+                const baseUrl = window.location.origin + window.location.pathname;
+                const mediaType = isSeries ? 'tv' : 'movie';
+                const slug = (title || '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
+                const cleanUrl = `${baseUrl}?watch=${item.id}&type=${mediaType}${slug ? `&title=${slug}` : ''}`;
+                if (navigator.clipboard && navigator.clipboard.writeText) {
+                  await navigator.clipboard.writeText(cleanUrl);
+                }
+                soundFx.playWaterDrop?.();
+              } catch (err) {}
+            }}
+            title="Copy Direct 4K Link"
+            className="w-8 h-8 rounded-full bg-black/70 hover:bg-cyan-500 hover:text-gray-950 text-white flex items-center justify-center backdrop-blur-md border border-white/20 hover:border-cyan-400 transition transform scale-75 group-hover:scale-100 cursor-pointer"
+          >
+            <Share2 className="w-3.5 h-3.5" />
+          </button>
         </div>
       </div>
 
