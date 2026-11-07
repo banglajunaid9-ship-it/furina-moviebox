@@ -2,6 +2,18 @@
 @tailwind components;
 @tailwind utilities;
 
+/* 3D poster ring: slow floating bob */
+@keyframes poster-ring-float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-8px); }
+}
+.poster-ring-float {
+  animation: poster-ring-float 6s ease-in-out infinite;
+}
+@media (prefers-reduced-motion: reduce) {
+  .poster-ring-float { animation: none; }
+}
+
 @layer base {
   html {
     scroll-behavior: smooth;

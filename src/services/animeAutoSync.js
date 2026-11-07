@@ -13,7 +13,7 @@ const STORAGE_KEY_SYNC_INTERVAL = 'furina_anime_sync_mode'; // 'daily' | 'weekly
 const ONE_DAY_MS = 24 * 60 * 60 * 1000;
 const ONE_WEEK_MS = 7 * ONE_DAY_MS;
 
-const TMDB_API_KEY = '4e44d9029b1270a757cddc766a1bcb63';
+import { TMDB_API_KEY } from './tmdbConfig.js';
 const TMDB_BASE = 'https://api.themoviedb.org/3';
 
 // Known Hindi titles for fast matching

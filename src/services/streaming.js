@@ -313,6 +313,10 @@ export const SERVERS = [
     supportsAudioSwitching: true,
     getMovieUrl: (tmdbId, audioMode = 'hindi') => {
       const cleanId = String(tmdbId).replace(/[^0-9]/g, '') || '533535';
+      if (cleanId === '63174') {
+        const subDub = audioMode === 'sub' ? 'sub' : (audioMode === 'hindi' ? 'hindi' : 'dub');
+        return `https://vidlink.pro/tv/63174/1/1?primaryColor=06b6d4&sub_dub=${subDub}`;
+      }
       const lang = audioMode === 'english' ? 'en' : 'hi';
       return `https://nxsha.space/embed/movie/${cleanId}?lang=${lang}&disable_app_ad=true`;
     },
@@ -320,6 +324,10 @@ export const SERVERS = [
       const cleanId = String(tmdbId).replace(/[^0-9]/g, '') || '66732';
       const seasonNum = Math.max(1, Number(s) || 1);
       const epNum = Math.max(1, Number(e) || 1);
+      if (cleanId === '63174') {
+        const subDub = audioMode === 'sub' ? 'sub' : (audioMode === 'hindi' ? 'hindi' : 'dub');
+        return `https://vidlink.pro/tv/63174/${seasonNum}/${epNum}?primaryColor=06b6d4&sub_dub=${subDub}`;
+      }
       const lang = audioMode === 'english' ? 'en' : 'hi';
       return `https://nxsha.space/embed/tv/${cleanId}/${seasonNum}/${epNum}?lang=${lang}&disable_app_ad=true`;
     }
@@ -369,6 +377,10 @@ export const SERVERS = [
     supportsAudioSwitching: true,
     getMovieUrl: (tmdbId, audioMode = 'hindi') => {
       const cleanId = String(tmdbId).replace(/[^0-9]/g, '') || '533535';
+      if (cleanId === '63174') {
+        const subDub = audioMode === 'sub' ? 'sub' : (audioMode === 'hindi' ? 'hindi' : 'dub');
+        return `https://vidlink.pro/tv/63174/1/1?primaryColor=06b6d4&sub_dub=${subDub}`;
+      }
       const lang = audioMode === 'english' ? 'en' : (audioMode === 'sub' ? 'ja' : 'hi');
       return `https://nxsha.space/embed/movie/${cleanId}?lang=${lang}&disable_app_ad=true`;
     },

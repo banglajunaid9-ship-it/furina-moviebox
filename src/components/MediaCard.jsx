@@ -1,6 +1,6 @@
 import React, { useState, useRef, useCallback } from 'react';
 import { Play, Star, Bookmark, Check, Sparkles, Volume2, Film, Tv, Info, Share2 } from 'lucide-react';
-import { isHindiAvailable } from '../services/tmdb';
+import { isHindiAvailable, fetchTmdbArtwork } from '../services/tmdb';
 import { resolvePosterUrl } from '../services/contentModel';
 import soundFx from '../services/soundFx';
 
@@ -13,6 +13,8 @@ const MediaCard = React.memo(function MediaCard({
 }) {
   const [imageLoaded, setImageLoaded] = useState(false);
   const [imageError, setImageError] = useState(false);
+  const [recoveredSrc, setRecoveredSrc] = useState(null);
+  const fallbackStageRef = useRef(0);
   const [isHovered, setIsHovered] = useState(false);
   const [tilt, setTilt] = useState({ x: 0, y: 0 });
   const [glare, setGlare] = useState({ x: 50, y: 50, opacity: 0 });
@@ -101,6 +103,33 @@ const MediaCard = React.memo(function MediaCard({
 
   const rawPoster = item.poster_path || item.poster || item.backdrop_path || item.backdrop;
   const posterSrc = resolvePosterUrl(rawPoster, 'w500');
+  const imgSrc = recoveredSrc || posterSrc;
+
+  // Poster failed: try the backdrop, then the real artwork from TMDB, then the placeholder.
+  const handleImageError = async () => {
+    if (fallbackStageRef.current === 0) {
+      fallbackStageRef.current = 1;
+      const backdrop = item.backdrop_path || item.backdrop;
+      const backdropSrc = backdrop && backdrop !== rawPoster ? resolvePosterUrl(backdrop, 'w500') : null;
+      if (backdropSrc && backdropSrc !== imgSrc) {
+        setRecoveredSrc(backdropSrc);
+        return;
+      }
+    }
+    if (fallbackStageRef.current === 1) {
+      fallbackStageRef.current = 2;
+      const tmdbId = item.tmdbId || item.tmdb_id || item.id;
+      const type = item.type === 'tv' || item.media_type === 'tv' ? 'tv' : 'movie';
+      const art = await fetchTmdbArtwork(type, tmdbId);
+      const path = art?.poster_path || art?.backdrop_path;
+      if (path) {
+        setRecoveredSrc(`https://image.tmdb.org/t/p/w500${path}`);
+        return;
+      }
+    }
+    setImageError(true);
+    setImageLoaded(true);
+  };
 
   return (
     <div 
@@ -146,19 +175,14 @@ const MediaCard = React.memo(function MediaCard({
       >
         {/* Poster Image */}
         <img
-          src={imageError ? './icon-512.png' : posterSrc}
+          src={imageError ? './icon-512.png' : imgSrc}
           alt={title}
           loading="lazy"
           decoding="async"
           onLoad={() => setImageLoaded(true)}
-          onError={(e) => {
-            setImageError(true);
-            setImageLoaded(true);
-            e.currentTarget.onerror = null;
-            e.currentTarget.src = './icon-512.png';
-          }}
+          onError={() => { if (!imageError) handleImageError(); }}
           className={`w-full h-full object-cover transition-all duration-700 ease-out group-hover:scale-108 ${
-            imageLoaded ? 'opacity-100' : 'opacity-0'
+            imageLoaded && !imageError ? 'opacity-100' : 'opacity-0'
           }`}
         />
 

@@ -148,7 +148,7 @@ export function probeServers(servers, tmdbId) {
  * Rank servers. Score = tier (dominant) + live reachability + user failure history
  * + audio fit. Pure function over cached data so it is safe to call during render.
  */
-export function evaluateServers({ servers, audioMode = 'english', isAnime = false, isHanime = false, tmdbId, excludeIds = [] }) {
+export function evaluateServers({ servers, audioMode = 'english', isAnime = false, isHanime = false, isSeries = false, tmdbId, excludeIds = [] }) {
   if (!Array.isArray(servers) || servers.length === 0) {
     return { bestServer: null, rankedServers: [], stats: { total: 0 } };
   }
@@ -166,13 +166,14 @@ export function evaluateServers({ servers, audioMode = 'english', isAnime = fals
     }
     if (recentlyFailed(srv.id, tmdbId)) { score -= 40; notes.push('failed here before'); }
     if (excludeIds.includes(srv.id)) score -= 200;
-    // Hard guard: NxSha confuses Lucifer TV series (63174) with Mohanlal's 2019 Malayalam movie
-    if (String(tmdbId) === '63174' && srv.id === 'nxsha') {
-      score -= 200;
+    // Hard guard: NxSha & HDMovie2 confuse Lucifer TV series (63174) with Mohanlal's 2019 Malayalam movie
+    if ((String(tmdbId) === '63174' || isSeries) && (srv.id === 'nxsha' || srv.id === 'hdmovie2')) {
+      score -= 300;
       notes.push('database collision');
     }
     if (audioMode === 'hindi') {
-      if (profile.hindi) score += 45;
+      if (profile.hindi && srv.id !== 'nxsha' && srv.id !== 'hdmovie2') score += 55;
+      else if (profile.hindi) score += 20;
       else score -= 60;
     }
     if ((isAnime || audioMode === 'sub') && srv.id === 'vidlink') score += 6;

@@ -1,0 +1,29 @@
+{
+  "name": "Furina Reader",
+  "short_name": "Furina",
+  "description": "Your world. Your stories. Your library.",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#0b0c1f",
+  "theme_color": "#0b0c1f",
+  "categories": ["books", "entertainment"],
+  "icons": [
+    { "src": "logo.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any" },
+    { "src": "icon-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "icon-512.png", "sizes": "512x512", "type": "image/png" },
+    { "src": "icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ],
+  "file_handlers": [
+    {
+      "action": "./",
+      "accept": {
+        "application/vnd.comicbook+zip": [".cbz"],
+        "application/vnd.comicbook-rar": [".cbr"],
+        "application/epub+zip": [".epub"],
+        "application/pdf": [".pdf"]
+      }
+    }
+  ]
+}

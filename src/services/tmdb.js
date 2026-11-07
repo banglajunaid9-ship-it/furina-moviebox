@@ -4,9 +4,7 @@ import { getAllWorldAnime, syncWorldAnimeNow, getLastAnimeSyncDisplay, isAnimeHi
 
 export { getAllWorldAnime, syncWorldAnimeNow, getLastAnimeSyncDisplay, isAnimeHindiDub };
 
-const API_KEY = '4e44d9029b1270a757cddc766a1bcb63';
-
-const BASE_URL = 'https://api.themoviedb.org/3';
+import { TMDB_API_KEY as API_KEY, TMDB_BASE_URL as BASE_URL } from './tmdbConfig.js';
 
 export const IMG_BASE = 'https://image.tmdb.org/t/p/w500';
 
@@ -19,11 +17,25 @@ export const BACKDROP_BASE = 'https://image.tmdb.org/t/p/original';
 const today = new Date().toISOString().split('T')[0];
 
 export async function cachedFetchJson(url, ttlMs = 300000) {
-  try {
-    return await apiManager.request(url, { ttlMs, timeoutMs: 8000, retries: 1 }, 'tmdb');
-  } catch (err) {
-    throw err;
+  return apiManager.request(url, { ttlMs, timeoutMs: 8000, retries: 1 }, 'tmdb');
+}
+
+// Look up a title's real poster/backdrop on TMDB (used when a card's image URL is dead).
+const artLookupCache = new Map();
+export function fetchTmdbArtwork(type, id) {
+  const numericId = Number(id);
+  if (!Number.isFinite(numericId) || numericId <= 0) return Promise.resolve(null);
+  const kind = type === 'tv' ? 'tv' : 'movie';
+  const key = `${kind}:${numericId}`;
+  if (!artLookupCache.has(key)) {
+    artLookupCache.set(
+      key,
+      cachedFetchJson(`${BASE_URL}/${kind}/${numericId}?api_key=${API_KEY}`, 3600000)
+        .then((d) => ({ poster_path: d?.poster_path || null, backdrop_path: d?.backdrop_path || null }))
+        .catch(() => null)
+    );
   }
+  return artLookupCache.get(key);
 }
 
 

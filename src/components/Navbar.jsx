@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Search, Film, Tv, Flame, Heart, Sparkles, X, Shield, Lock, Settings, Smartphone, Skull, Volume2, VolumeX, Command, Disc, Zap, Share2, Check } from 'lucide-react';
+import { Search, Film, Tv, Flame, Heart, Sparkles, X, Shield, Lock, Settings, Smartphone, Skull, Volume2, VolumeX, Command, Disc, Zap, Share2, Check, MoreHorizontal, Milestone, Users } from 'lucide-react';
 import soundFx from '../services/soundFx';
 
 export function HanimeIcon({ className = "w-3.5 h-3.5 sm:w-4 sm:h-4", ...props }) {
@@ -43,7 +43,9 @@ export default function Navbar({
   onOpenStudio,
   onOpenSearchOverlay,
   onOpenOracle,
-  onOpenJukebox
+  onOpenJukebox,
+  onOpenTimeline,
+  onOpenWatchTogether
 }) {
   const baseCategories = [
     { id: 'trending', label: 'Trending', icon: Flame },
@@ -70,7 +72,24 @@ export default function Navbar({
   const [localSearch, setLocalSearch] = useState(searchQuery || '');
   const [isSoundOn, setIsSoundOn] = useState(() => !soundFx.isMuted());
   const [shareCopied, setShareCopied] = useState(false);
+  const [isMoreOpen, setIsMoreOpen] = useState(false);
+  const moreRef = useRef(null);
   const inputRef = useRef(null);
+
+  // Close the "More" menu on outside click or Escape.
+  useEffect(() => {
+    if (!isMoreOpen) return;
+    const onPointer = (e) => {
+      if (moreRef.current && !moreRef.current.contains(e.target)) setIsMoreOpen(false);
+    };
+    const onKey = (e) => { if (e.key === 'Escape') setIsMoreOpen(false); };
+    document.addEventListener('pointerdown', onPointer);
+    document.addEventListener('keydown', onKey);
+    return () => {
+      document.removeEventListener('pointerdown', onPointer);
+      document.removeEventListener('keydown', onKey);
+    };
+  }, [isMoreOpen]);
   const isFocusedRef = useRef(false);
   const isComposingRef = useRef(false);
   const debounceTimerRef = useRef(null);
@@ -185,7 +204,7 @@ export default function Navbar({
         </div>
 
         {/* Compact Search Bar with 3D Spotlight Overlay Shortcut Trigger */}
-        <div className="flex-1 min-w-[110px] max-w-[190px] sm:max-w-xs md:max-w-sm relative transition-all duration-300">
+        <div className="flex-1 min-w-[110px] max-w-none sm:max-w-xs lg:max-w-[220px] xl:max-w-sm relative transition-all duration-300">
           <div className="relative flex items-center">
             <Search className="absolute left-2.5 w-3.5 h-3.5 text-cyan-400/70 pointer-events-none" />
             <input
@@ -236,24 +255,6 @@ export default function Navbar({
           </div>
         </div>
 
-        {/* 3D Spotlight Launcher Button (Desktop & Tablet) */}
-        {onOpenSearchOverlay && (
-          <button
-            onClick={() => {
-              soundFx.playSearchBeam();
-              onOpenSearchOverlay();
-            }}
-            title="Open 3D Spotlight Search (Ctrl+K or /)"
-            className="hidden sm:flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-cyan-950/60 border border-cyan-500/30 text-cyan-300 hover:text-white hover:border-cyan-400 text-xs font-semibold shadow-sm transition shrink-0 cursor-pointer"
-          >
-            <Sparkles className="w-3 h-3 text-cyan-400 animate-pulse" />
-            <span className="hidden xl:inline">Spotlight</span>
-            <kbd className="hidden lg:inline text-[9px] bg-black/50 border border-cyan-500/40 px-1 rounded font-mono text-cyan-200">
-              Ctrl+K
-            </kbd>
-          </button>
-        )}
-
         {/* Desktop Category Navigation */}
         <nav className="hidden lg:flex items-center gap-1 bg-[#0a1329]/80 p-0.5 rounded-full border border-cyan-500/20 min-w-0 shrink overflow-x-auto no-scrollbar">
           {categories.map((cat) => {
@@ -285,119 +286,95 @@ export default function Navbar({
           })}
         </nav>
 
-        {/* Action Controls: Movie Studio, Apps, Audio FX, Settings */}
-        <div className="flex items-center gap-1 sm:gap-1.5 shrink-0 ml-auto">
-          {onOpenOracle && (
+        {/* Action Controls: one "More" menu + Settings */}
+        <div className="flex items-center gap-1.5 shrink-0 ml-auto">
+          <div className="relative" ref={moreRef}>
             <button
-              onClick={() => {
-                soundFx.playSearchBeam?.();
-                onOpenOracle();
-              }}
-              title="Lady Furina's AI Mood & Vibe Oracle"
-              className="p-1.5 sm:px-2.5 sm:py-1 rounded-full border border-cyan-400/50 bg-gradient-to-r from-cyan-500/25 to-blue-600/25 hover:from-cyan-400 hover:to-blue-500 text-cyan-200 hover:text-gray-950 transition-all duration-200 flex items-center gap-1 text-[10px] sm:text-[11px] font-black cursor-pointer shadow-[0_0_12px_rgba(6,182,212,0.35)] shrink-0 active:scale-95"
+              type="button"
+              onClick={() => setIsMoreOpen((v) => !v)}
+              aria-haspopup="menu"
+              aria-expanded={isMoreOpen}
+              title="More"
+              className={`p-1.5 sm:px-2.5 sm:py-1 rounded-full border transition flex items-center gap-1 text-[11px] font-semibold cursor-pointer ${
+                isMoreOpen
+                  ? 'bg-cyan-500/20 border-cyan-400 text-white'
+                  : 'bg-[#0b1633] border-cyan-500/30 text-cyan-300 hover:text-white hover:bg-white/10'
+              }`}
             >
-              <Sparkles className="w-3.5 h-3.5 text-cyan-400 animate-spin" />
-              <span className="hidden sm:inline">AI Oracle</span>
+              <MoreHorizontal className="w-3.5 h-3.5" />
+              <span className="hidden sm:inline">More</span>
             </button>
-          )}
 
-          {onOpenJukebox && (
-            <button
-              onClick={() => {
-                soundFx.playClick?.();
-                onOpenJukebox();
-              }}
-              title="Anime OST & Cinema Vinyl Jukebox"
-              className="p-1.5 sm:px-2 sm:py-1 rounded-full border border-pink-500/40 bg-gradient-to-r from-pink-500/20 to-purple-600/20 hover:from-pink-500/35 hover:to-purple-600/35 text-pink-300 hover:text-white transition-all duration-200 flex items-center gap-1 text-[10px] sm:text-[11px] font-bold cursor-pointer shadow-sm shrink-0 active:scale-95 hover:shadow-[0_0_12px_rgba(244,63,94,0.4)]"
-            >
-              <Disc className="w-3.5 h-3.5 text-pink-400" />
-              <span className="hidden md:inline">Jukebox</span>
-            </button>
-          )}
-
-          <button
-            onClick={onOpenStudio}
-            data-testid="studio-btn"
-            title="Furina Movie Studio & Content Platform"
-            className="btn-shine p-1.5 sm:px-2.5 sm:py-1 rounded-full border border-cyan-500/40 bg-gradient-to-r from-cyan-500/20 to-blue-600/20 hover:from-cyan-500/35 hover:to-blue-600/35 text-cyan-300 hover:text-white transition-all duration-200 flex items-center gap-1 text-[10px] sm:text-[11px] font-bold cursor-pointer shadow-sm shrink-0 group/studio hover:shadow-[0_0_12px_rgba(6,182,212,0.4)]"
-          >
-            <Film className="w-3.5 h-3.5 sm:w-3 sm:h-3 text-cyan-400 group-hover/studio:scale-110 group-hover/studio:rotate-6 transition-transform duration-200" />
-            <span className="hidden sm:inline">Studio</span>
-          </button>
-
-          <button
-            onClick={onOpenAndroidModal}
-            title="Install App on Android (1-Tap Standalone PWA & Native)"
-            className="hidden sm:flex p-1 sm:px-2 sm:py-1 rounded-full border border-emerald-500/40 bg-emerald-500/15 text-emerald-300 hover:text-white hover:bg-emerald-500/25 transition-all duration-200 items-center gap-1 text-[10px] sm:text-[11px] font-bold cursor-pointer shrink-0 group/android hover:shadow-[0_0_12px_rgba(16,185,129,0.4)]"
-          >
-            <Smartphone className="w-3 h-3 text-emerald-400 group-hover/android:scale-110 transition-transform duration-200" />
-            <span className="hidden sm:inline">Android App</span>
-          </button>
-
-          <button
-            onClick={onOpenIPhoneModal}
-            title="Install App on iPhone / iPad (Zero Ads)"
-            className="hidden sm:flex px-2 py-1 rounded-full border border-cyan-500/30 bg-[#0b1633] text-cyan-300 hover:text-white hover:bg-white/10 transition-all duration-200 items-center gap-1 text-[11px] font-semibold cursor-pointer shrink-0 group/iphone hover:border-cyan-400/50"
-          >
-            <Smartphone className="w-3 h-3 text-cyan-400 group-hover/iphone:scale-110 transition-transform duration-200" />
-            <span>iPhone</span>
-          </button>
-
-          <button
-            onClick={() => {
-              const unmuted = soundFx.toggleMute();
-              setIsSoundOn(unmuted);
-            }}
-            data-testid="cozy-sound-btn"
-            title={isSoundOn ? '3D Sound FX: Active (Click to Mute)' : '3D Sound FX: Muted (Click to Enable)'}
-            className={`p-1.5 sm:p-1.5 rounded-full border transition-all duration-200 flex items-center gap-1 cursor-pointer shrink-0 ${
-              isSoundOn
-                ? 'bg-amber-500/20 border-amber-400/40 text-amber-300 hover:bg-amber-500/30 shadow-[0_0_10px_rgba(251,146,60,0.35)]'
-                : 'bg-[#0b1633] border-cyan-500/30 text-slate-400 hover:text-white hover:bg-white/10'
-            }`}
-          >
-            {isSoundOn ? <Volume2 className="w-3.5 h-3.5 text-amber-300 animate-pulse" /> : <VolumeX className="w-3.5 h-3.5 text-slate-400" />}
-            <span className="hidden 2xl:inline text-[11px] font-semibold">
-              {isSoundOn ? 'Audio' : 'Muted'}
-            </span>
-          </button>
-
-          {/* Low Spec / Eco Potato Mode Toggle (Anti-BSOD & Zero GPU Load) */}
-          <button
-            onClick={() => {
-              soundFx.playClick?.();
-              onToggleLowSpec?.();
-            }}
-            data-testid="eco-mode-btn"
-            title={isLowSpecMode ? "⚡ Low Spec Mode: ON (0% GPU Load, Anti-BSOD) — Click to switch to 3D" : "⚡ Low Spec Mode: OFF — Click to enable Eco Mode for budget PCs & low-end GPUs"}
-            className={`p-1.5 sm:px-2.5 sm:py-1 rounded-full border transition-all duration-200 flex items-center gap-1.5 cursor-pointer shrink-0 ${
-              isLowSpecMode
-                ? 'bg-amber-500/25 border-amber-400 text-amber-300 shadow-[0_0_12px_rgba(245,158,11,0.45)] font-bold'
-                : 'bg-[#0b1633] border-cyan-500/30 text-cyan-300 hover:text-white hover:bg-white/10 hover:border-cyan-400/50'
-            }`}
-          >
-            <Zap className={`w-3.5 h-3.5 ${isLowSpecMode ? 'text-amber-400 fill-amber-400 animate-pulse' : 'text-cyan-400'}`} />
-            <span className="hidden sm:inline text-[11px] font-semibold">
-              {isLowSpecMode ? 'Eco ON' : 'Eco Mode'}
-            </span>
-          </button>
-
-          {/* Quick Share Clean App Link */}
-          <button
-            onClick={async () => {
-              try {
-                await navigator.clipboard.writeText(window.location.href);
-                soundFx.playWaterDrop?.();
-                setShareCopied(true);
-                setTimeout(() => setShareCopied(false), 2200);
-              } catch (e) {}
-            }}
-            title="Copy Clean Share Link"
-            className="p-1.5 sm:px-2.5 sm:py-1 rounded-full border border-cyan-500/35 bg-[#091535] hover:bg-cyan-500/20 text-cyan-300 hover:text-white transition flex items-center gap-1 text-[10px] sm:text-[11px] font-bold cursor-pointer shrink-0"
-          >
-            {shareCopied ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Share2 className="w-3.5 h-3.5 text-cyan-400" />}
-            <span className="hidden xl:inline">{shareCopied ? 'Copied ✨' : 'Share'}</span>
-          </button>
+            {isMoreOpen && (
+              <div
+                role="menu"
+                className="absolute right-0 mt-2 w-60 rounded-2xl border border-cyan-500/25 bg-[#081129] shadow-[0_18px_50px_rgba(0,0,0,0.6)] p-1.5 z-50"
+              >
+                {[
+                  onOpenSearchOverlay && { label: 'Spotlight search', hint: 'Ctrl+K', icon: Search, run: onOpenSearchOverlay },
+                  onOpenOracle && { label: 'AI mood picks', icon: Sparkles, run: onOpenOracle },
+                  onOpenTimeline && { label: 'Franchise timelines', icon: Milestone, run: onOpenTimeline },
+                  onOpenWatchTogether && { label: 'Watch together', icon: Users, run: onOpenWatchTogether },
+                  onOpenJukebox && { label: 'Jukebox', icon: Disc, run: onOpenJukebox },
+                  onOpenStudio && { label: 'Studio', icon: Film, run: onOpenStudio },
+                  'divider',
+                  onOpenAndroidModal && { label: 'Install on Android', icon: Smartphone, run: onOpenAndroidModal },
+                  onOpenIPhoneModal && { label: 'Install on iPhone', icon: Smartphone, run: onOpenIPhoneModal },
+                  'divider',
+                  {
+                    label: isSoundOn ? 'Sound effects: on' : 'Sound effects: off',
+                    icon: isSoundOn ? Volume2 : VolumeX,
+                    keepOpen: true,
+                    run: () => setIsSoundOn(soundFx.toggleMute()),
+                  },
+                  {
+                    label: isLowSpecMode ? 'Eco mode: on' : 'Eco mode: off',
+                    icon: Zap,
+                    keepOpen: true,
+                    run: () => onToggleLowSpec?.(),
+                  },
+                  {
+                    label: shareCopied ? 'Link copied' : 'Copy share link',
+                    icon: shareCopied ? Check : Share2,
+                    keepOpen: true,
+                    run: async () => {
+                      try {
+                        await navigator.clipboard.writeText(window.location.href);
+                        setShareCopied(true);
+                        setTimeout(() => setShareCopied(false), 2000);
+                      } catch (e) {}
+                    },
+                  },
+                ]
+                  .filter(Boolean)
+                  .map((entry, i) => {
+                    if (entry === 'divider') {
+                      return <div key={`d${i}`} className="my-1 h-px bg-cyan-500/15" />;
+                    }
+                    const Icon = entry.icon;
+                    return (
+                      <button
+                        key={entry.label}
+                        type="button"
+                        role="menuitem"
+                        onClick={() => {
+                          soundFx.playClick?.();
+                          entry.run();
+                          if (!entry.keepOpen) setIsMoreOpen(false);
+                        }}
+                        className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-[13px] text-cyan-50/90 hover:bg-cyan-500/10 hover:text-white transition cursor-pointer text-left"
+                      >
+                        <Icon className="w-4 h-4 text-cyan-400 shrink-0" />
+                        <span className="flex-1">{entry.label}</span>
+                        {entry.hint && (
+                          <kbd className="text-[10px] font-mono text-cyan-300/60 border border-cyan-500/25 rounded px-1">{entry.hint}</kbd>
+                        )}
+                      </button>
+                    );
+                  })}
+              </div>
+            )}
+          </div>
 
           <button
             onClick={onOpenSettings}

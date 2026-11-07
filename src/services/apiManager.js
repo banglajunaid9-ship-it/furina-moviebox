@@ -4,6 +4,8 @@
 // caching, rate-limit safety, and live health diagnostics.
 // ============================================================================
 
+import { TMDB_API_KEY, TMDB_BASE_URL } from './tmdbConfig.js';
+
 class APIManager {
   constructor() {
     this.cache = new Map();
@@ -148,7 +150,7 @@ class APIManager {
   async checkHealth() {
     const start = Date.now();
     try {
-      await this.request('https://api.themoviedb.org/3/configuration?api_key=4e44d9029b1270a757cddc766a1bcb63', { timeoutMs: 3500, skipCache: true }, 'tmdb');
+      await this.request(`${TMDB_BASE_URL}/configuration?api_key=${TMDB_API_KEY}`,{ timeoutMs: 3500, skipCache: true }, 'tmdb');
     } catch (e) {
       // offline or rate limit
     }

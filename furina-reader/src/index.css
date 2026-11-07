@@ -1,0 +1,140 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root,
+  .dark {
+    --bg: 11 12 31;
+    --surface: 19 20 46;
+    --raised: 29 30 66;
+    --line: 255 255 255;
+    --ink: 236 236 255;
+    --muted: 160 162 204;
+    --accent: 139 123 255;
+    --accent-2: 79 141 255;
+    --on-accent: 255 255 255;
+    --danger: 255 107 129;
+    --success: 74 222 160;
+    --warn: 250 200 90;
+    --line-a: 0.08;
+    --glass: 22 23 54;
+    color-scheme: dark;
+  }
+  .light {
+    --bg: 245 244 255;
+    --surface: 255 255 255;
+    --raised: 236 235 252;
+    --line: 30 28 80;
+    --ink: 24 22 60;
+    --muted: 96 96 140;
+    --on-accent: 255 255 255;
+    --danger: 214 52 86;
+    --success: 22 163 110;
+    --warn: 190 130 20;
+    --line-a: 0.1;
+    --glass: 255 255 255;
+    color-scheme: light;
+  }
+
+  html,
+  body,
+  #root {
+    height: 100%;
+  }
+  body {
+    @apply bg-bg font-sans text-ink antialiased;
+    font-feature-settings: 'ss01', 'cv11';
+    -webkit-tap-highlight-color: transparent;
+    overscroll-behavior-y: none;
+  }
+  .dark body {
+    background-image: radial-gradient(1200px 600px at 85% -10%, rgb(var(--accent) / 0.12), transparent 60%),
+      radial-gradient(900px 500px at -10% 110%, rgb(var(--accent-2) / 0.1), transparent 60%);
+    background-attachment: fixed;
+  }
+  ::selection {
+    background: rgb(var(--accent) / 0.35);
+  }
+  :focus-visible {
+    outline: 2px solid rgb(var(--accent));
+    outline-offset: 2px;
+    border-radius: 8px;
+  }
+  .reduce-motion *,
+  .reduce-motion *::before,
+  .reduce-motion *::after {
+    animation-duration: 0.001ms !important;
+    transition-duration: 0.001ms !important;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.001ms !important;
+      transition-duration: 0.001ms !important;
+    }
+  }
+}
+
+@layer components {
+  .hairline {
+    border-color: rgb(var(--line) / var(--line-a));
+  }
+  .glass {
+    background: rgb(var(--glass) / 0.72);
+    backdrop-filter: blur(18px) saturate(1.4);
+    -webkit-backdrop-filter: blur(18px) saturate(1.4);
+    border: 1px solid rgb(var(--line) / var(--line-a));
+  }
+  .accent-gradient {
+    background-image: linear-gradient(135deg, rgb(var(--accent)), rgb(var(--accent-2)));
+  }
+  .text-gradient {
+    background-image: linear-gradient(120deg, rgb(var(--ink)) 20%, rgb(var(--accent)) 60%, rgb(var(--accent-2)));
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+  .skeleton {
+    @apply relative overflow-hidden rounded-xl bg-raised;
+  }
+  .skeleton::after {
+    content: '';
+    @apply absolute inset-0 -translate-x-full animate-shimmer;
+    background: linear-gradient(90deg, transparent, rgb(var(--line) / 0.06), transparent);
+  }
+  .scroll-thin {
+    scrollbar-width: thin;
+    scrollbar-color: rgb(var(--line) / 0.18) transparent;
+  }
+  .no-scrollbar {
+    scrollbar-width: none;
+  }
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+  .safe-bottom {
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+  .safe-top {
+    padding-top: env(safe-area-inset-top);
+  }
+  .field {
+    @apply h-10 w-full rounded-xl border bg-surface px-3 text-sm text-ink placeholder:text-muted/70 hairline transition focus:border-accent/60 focus:outline-none focus:ring-2 focus:ring-accent/25;
+  }
+  .label {
+    @apply mb-1.5 block text-xs font-semibold uppercase tracking-wider text-muted;
+  }
+  .range {
+    @apply h-1.5 w-full cursor-pointer appearance-none rounded-full bg-raised accent-[rgb(var(--accent))];
+  }
+}
+
+/* EPUB text pages rendered inside a script-less sandbox */
+.epub-frame {
+  border: 0;
+  width: 100%;
+  height: 100%;
+  background: transparent;
+}

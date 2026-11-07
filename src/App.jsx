@@ -6,8 +6,6 @@ import MediaShelf from './components/MediaShelf';
 import ErrorBoundary from './components/ErrorBoundary';
 import { FurinaHydro3DBackground } from './components/ui/FurinaHydro3DBackground';
 import { FurinaMascot } from './components/ui/FurinaMascot';
-import { Marquee } from './components/ui/marquee';
-import { FloatingDock } from './components/ui/floating-dock';
 import soundFx from './services/soundFx';
 import { getStoredSettings, applyThemeAndAppSettings, detectLowEndDevice } from './services/settingsService';
 import { getStoredStudioMovies } from './services/studioService';
@@ -833,6 +831,8 @@ export default function App() {
         onOpenSearchOverlay={() => setIsSearchOverlayOpen(true)}
         onOpenOracle={() => setIsOracleOpen(true)}
         onOpenJukebox={() => setIsJukeboxOpen(true)}
+        onOpenTimeline={() => setIsTimelineOpen(true)}
+        onOpenWatchTogether={() => setIsWatchTogetherOpen(true)}
       />
 
       {/* Main Container */}
@@ -880,32 +880,6 @@ export default function App() {
               isLowSpecMode={isLowSpecMode}
             />
           </ErrorBoundary>
-        )}
-
-        {/* Magic UI Infinite Marquee for Trending Quick-Picks */}
-        {items && items.length > 0 && (
-          <div className="mb-4 sm:mb-8 overflow-hidden rounded-xl sm:rounded-2xl bg-[#060e24]/75 border border-cyan-500/25 py-1.5 sm:py-2.5 backdrop-blur-xl shadow-lg">
-            <div className="flex items-center gap-1.5 px-3 sm:px-4 mb-1 text-[10px] sm:text-[11px] font-black uppercase tracking-wider text-cyan-300">
-              <Sparkles className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-cyan-400 animate-spin" />
-              <span>Fontaine 4K Live Broadcasts:</span>
-            </div>
-            <Marquee pauseOnHover className="[--duration:32s]">
-              {items.slice(0, 10).map((m) => (
-                <div
-                  key={`marquee-${m.id}`}
-                  onClick={() => {
-                    soundFx.playClick();
-                    setSafeActiveMedia(m);
-                  }}
-                  className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-[#081534] border border-cyan-500/30 hover:border-cyan-400 text-[11px] sm:text-xs text-white font-semibold cursor-pointer transition hover:scale-105 mx-1"
-                >
-                  <span className="text-[9px] text-cyan-400">▶</span>
-                  <span className="truncate max-w-[130px] sm:max-w-[160px]">{m.title || m.name}</span>
-                  <span className="badge-4k-uhd text-[7.5px] px-1 py-0.2 rounded font-black">4K</span>
-                </div>
-              ))}
-            </Marquee>
-          </div>
         )}
 
         {/* Continue Watching Section */}
@@ -1748,118 +1722,6 @@ export default function App() {
           onClose={() => setIsJukeboxOpen(false)}
         />
       </Suspense>
-
-      {/* Aceternity UI 3D Floating Dock (Desktop & Large Screens) */}
-      <div className="fixed bottom-5 left-1/2 -translate-x-1/2 z-40 hidden md:block pointer-events-auto">
-        <FloatingDock
-          items={[
-            {
-              title: "Trending",
-              icon: <Flame className="w-5 h-5" />,
-              onClick: () => {
-                soundFx.playClick();
-                setActiveCategory('trending');
-                setSearchQuery('');
-              },
-              active: activeCategory === 'trending' && !searchQuery
-            },
-            {
-              title: "Hollywood Movies",
-              icon: <Film className="w-5 h-5" />,
-              onClick: () => {
-                soundFx.playClick();
-                setActiveCategory('hollywood');
-                setSearchQuery('');
-              },
-              active: activeCategory === 'hollywood'
-            },
-            {
-              title: "Hindi Hub",
-              icon: <Sparkles className="w-5 h-5 text-amber-300" />,
-              onClick: () => {
-                soundFx.playClick();
-                setActiveCategory('hindi');
-                setSearchQuery('');
-              },
-              active: activeCategory === 'hindi'
-            },
-            {
-              title: "Anime Vault",
-              icon: <Sparkles className="w-5 h-5 text-purple-300" />,
-              onClick: () => {
-                soundFx.playClick();
-                setActiveCategory('anime');
-                setSearchQuery('');
-              },
-              active: activeCategory === 'anime'
-            },
-            {
-              title: "AI Vibe Oracle",
-              icon: <Sparkles className="w-5 h-5 text-yellow-300 animate-pulse" />,
-              onClick: () => {
-                soundFx.playClick();
-                setIsOracleOpen(true);
-              }
-            },
-            {
-              title: "Vinyl Jukebox",
-              icon: <Disc className="w-5 h-5 text-cyan-300 animate-[spin_8s_linear_infinite]" />,
-              onClick: () => {
-                soundFx.playClick();
-                setIsJukeboxOpen(true);
-              }
-            },
-            {
-              title: "Franchises",
-              icon: <Milestone className="w-5 h-5 text-amber-300" />,
-              onClick: () => {
-                soundFx.playClick();
-                setIsTimelineOpen(true);
-              }
-            },
-            {
-              title: "Sync Room",
-              icon: <Users className="w-5 h-5 text-purple-300" />,
-              onClick: () => {
-                soundFx.playClick();
-                setIsWatchTogetherOpen(true);
-              }
-            },
-            {
-              title: "3D Spotlight (Ctrl+K)",
-              icon: <Search className="w-5 h-5 text-cyan-300" />,
-              onClick: () => {
-                soundFx.playSearchBeam();
-                setIsSearchOverlayOpen(true);
-              }
-            },
-            {
-              title: "Movie Studio",
-              icon: <Film className="w-5 h-5 text-emerald-300" />,
-              onClick: () => {
-                soundFx.playClick();
-                setIsStudioOpen(true);
-              }
-            },
-            {
-              title: isMuted ? "Audio Muted" : "Hydro Sound FX Active",
-              icon: isMuted ? <VolumeX className="w-5 h-5 text-rose-400" /> : <Volume2 className="w-5 h-5 text-cyan-300" />,
-              onClick: () => {
-                soundFx.toggleMute();
-                setIsMuted(soundFx.isMuted());
-              }
-            },
-            {
-              title: "Settings",
-              icon: <Settings className="w-5 h-5" />,
-              onClick: () => {
-                soundFx.playClick();
-                setIsSettingsOpen(true);
-              }
-            }
-          ]}
-        />
-      </div>
 
       {/* Interactive Cute Furina Chibi Mascot Companion */}
       <FurinaMascot

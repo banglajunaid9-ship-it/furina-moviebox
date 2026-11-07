@@ -9,6 +9,7 @@ import { SparklesCore } from './ui/sparkles';
 import { Ripple } from './ui/ripple';
 import { ShimmerButton } from './ui/shimmer-button';
 import { GlowEffect } from './ui/glow-effect';
+import PosterRing3D from './ui/PosterRing3D';
 
 export default function HeroBanner({ 
   items, 
@@ -196,47 +197,25 @@ export default function HeroBanner({
         />
       )}
 
-      {/* Theatrical Fontaine Opera Stage: Lady Furina Performing Prominently */}
-      <div 
-        className="hidden md:flex absolute top-7 right-8 z-30 flex-col items-center p-3.5 rounded-2xl bg-gradient-to-b from-[#091a42]/90 via-[#050f29]/95 to-[#03081a]/95 border-2 border-cyan-400/50 shadow-[0_12px_35px_rgba(0,0,0,0.85),0_0_25px_rgba(0,242,254,0.4)] backdrop-blur-xl group/stage hover:scale-105 transition-all duration-300 pointer-events-auto cursor-pointer"
-        style={{ transform: 'translateZ(55px)' }}
-        onClick={() => soundFx.playWaterDrop()}
-        title="Lady Furina's Fontaine Theatrical Stage"
-      >
-        {/* Stage Spotlight Glow */}
-        <div className="absolute -top-3 w-20 h-20 bg-cyan-400/30 rounded-full blur-xl pointer-events-none" />
-        
-        {/* Top Stage Header with Gold Trim */}
-        <div className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-gradient-to-r from-amber-500/25 via-cyan-500/20 to-blue-500/25 border border-amber-300/40 text-amber-300 text-[10px] font-black tracking-wider uppercase mb-2 shadow">
-          <span>👑</span>
-          <span>Fontaine Opera Stage</span>
-        </div>
-
-        {/* Animated Furina Mascot Dancing on Platform */}
-        <div className="relative w-20 h-20 rounded-full overflow-hidden border-2 border-cyan-300 shadow-[0_0_22px_rgba(0,242,254,0.75)] bg-[#040a1c] mb-2">
-          <img
-            src="./furina_chibi.gif"
-            alt="Furina Chibi Mascot Stage Performance"
-            className="w-full h-full object-cover transform hover:scale-110 transition-transform duration-200"
+      {/* 3D poster ring (large screens): spins to the featured title; drag or click to switch */}
+      {list.length > 2 && (
+        <div
+          className="hidden lg:block absolute top-6 right-4 xl:right-10 z-30"
+          onMouseEnter={() => setIsPaused(true)}
+        >
+          <PosterRing3D
+            items={list}
+            activeIndex={currentIndex}
+            onSelect={(idx) => { soundFx.playClick?.(); setCurrentIndex(idx); }}
+            onActivate={(it) => (onOpenDetails ? onOpenDetails(it) : onPlay(it))}
+            lowMotion={isLowSpecMode}
           />
-          <div className="absolute bottom-0 inset-x-0 h-4 bg-gradient-to-t from-cyan-400/50 to-transparent pointer-events-none" />
         </div>
-
-        {/* Stage Dialogue Pill */}
-        <div className="px-2.5 py-1 rounded-xl bg-cyan-950/85 border border-cyan-400/40 text-center max-w-[155px]">
-          <span className="text-[10px] font-extrabold text-cyan-200 flex items-center justify-center gap-1">
-            <span className="animate-spin text-xs">✨</span>
-            <span>Furina Premiere</span>
-          </span>
-          <p className="text-[8.5px] text-cyan-300/90 mt-0.5 font-medium leading-tight">
-            "Behold, Fontaine's finest 4K cinema!"
-          </p>
-        </div>
-      </div>
+      )}
 
       {/* Content */}
       <div 
-        className="absolute bottom-0 left-0 right-0 p-3 sm:p-8 md:p-12 max-w-3xl z-10 animate-fade-in [transform-style:preserve-3d]" 
+        className="absolute bottom-0 left-0 right-0 p-3 sm:p-8 md:p-12 max-w-3xl lg:max-w-[52%] z-10 animate-fade-in [transform-style:preserve-3d]" 
         key={`content-${currentItem?.id}`}
       >
         
@@ -289,7 +268,7 @@ export default function HeroBanner({
         </div>
 
         <h1 
-          className="text-base xs:text-xl sm:text-4xl md:text-5xl font-black text-white tracking-tight mb-1 sm:mb-2 leading-tight drop-shadow-[0_4px_18px_rgba(0,242,254,0.45)] transition-transform duration-200 line-clamp-1 xs:line-clamp-2"
+          className="text-base xs:text-xl sm:text-4xl md:text-5xl font-black text-white tracking-tight mb-1 sm:mb-2 leading-tight drop-shadow-[0_4px_18px_rgba(0,242,254,0.45)] transition-transform duration-200 line-clamp-1 xs:line-clamp-2 sm:line-clamp-2"
           style={{ transform: 'translateZ(50px)' }}
         >
           {title}

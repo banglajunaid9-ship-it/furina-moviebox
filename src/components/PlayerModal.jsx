@@ -429,19 +429,19 @@ export default function PlayerModal({ item, onClose, preferredServerId, isHindiP
       const explicit = availableServers.find((s) => s.id === effectivePreferredServerId);
       if (explicit) return explicit;
     }
-    // Hard guard: Lucifer must NEVER default to NxSha (which collides with Mohanlal 2019 movie)
+    // Hard guard: Lucifer must NEVER default to NxSha or HDMovie2 (which collides with Mohanlal 2019 movie)
     if (isLuciferTitle) {
-      const cleanLuciferServer = availableServers.find((s) => s.id === 'vidlink' || s.id === 'vidup' || s.id === 'framex' || s.id === 'vidsrc_pm');
+      const cleanLuciferServer = availableServers.find((s) => s.id === 'vidlink' || s.id === 'vidsrc_net' || s.id === 'framex' || s.id === 'vidsrc_pm');
       if (cleanLuciferServer) return cleanLuciferServer;
     }
     // If opening with Hindi audio, immediately pick a verified Hindi dub mirror
     if (audioMode === 'hindi') {
-      // For TV series, NEVER default to nxsha due to database collision on Indian torrent scrapers
-      if (isSeries) {
+      // For TV series, NEVER default to nxsha or hdmovie2 due to database collision on Indian torrent scrapers
+      if (isSeries || isLuciferTitle) {
         const seriesHindi = availableServers.find((s) => s.id === 'vidlink' || s.id === 'one23embed' || s.id === 'vidsrc_pm');
         if (seriesHindi) return seriesHindi;
       }
-      const hindiMirror = availableServers.find((s) => s.id === 'vidlink' || s.id === 'one23embed' || s.id === 'nxsha' || s.id === 'moviebox');
+      const hindiMirror = availableServers.find((s) => s.id === 'vidlink' || s.id === 'one23embed' || s.id === 'tgvid' || s.id === 'multiembed');
       if (hindiMirror) return hindiMirror;
     }
     // Otherwise use the ranked list: real-test tiers + cached live reachability + failure history.
@@ -451,6 +451,7 @@ export default function PlayerModal({ item, onClose, preferredServerId, isHindiP
         audioMode,
         isAnime,
         isHanime,
+        isSeries,
         tmdbId: resolvedTmdbId
       });
       if (evaluation?.bestServer) return evaluation.bestServer;
@@ -623,6 +624,7 @@ export default function PlayerModal({ item, onClose, preferredServerId, isHindiP
       audioMode,
       isAnime,
       isHanime,
+      isSeries: isSeries || isLuciferTitle,
       tmdbId: resolvedTmdbId
     });
     if (evaluation.bestServer) {
@@ -1017,14 +1019,14 @@ export default function PlayerModal({ item, onClose, preferredServerId, isHindiP
 
     // When switching audio mode, prioritize keeping active server if it already supports this audio mode
     setSelectedServer((prevSrv) => {
-      // Hard guard: Lucifer must NEVER play via NxSha (avoids Mohanlal 2019 Malayalam movie collision)
-      if (isLuciferTitle && (prevSrv?.id === 'nxsha' || newMode === 'hindi')) {
+      // Hard guard: Lucifer must NEVER play via NxSha or HDMovie2 (avoids Mohanlal 2019 Malayalam movie collision)
+      if (isLuciferTitle && (prevSrv?.id === 'nxsha' || prevSrv?.id === 'hdmovie2' || newMode === 'hindi')) {
         return availableServers.find(s => s.id === 'vidlink') || availableServers[0];
       }
 
       if (prevSrv && prevSrv.supportsAudioSwitching && Array.isArray(prevSrv.supportedAudios) && prevSrv.supportedAudios.includes(newMode)) {
-        // If current server is nxsha and it's a TV series, do NOT stay on nxsha for hindi
-        if (prevSrv.id === 'nxsha' && isSeries) {
+        // If current server is nxsha or hdmovie2 and it's a TV series or Lucifer, do NOT stay on nxsha/hdmovie2 for hindi
+        if ((prevSrv.id === 'nxsha' || prevSrv.id === 'hdmovie2') && (isSeries || isLuciferTitle)) {
           const seriesHindi = availableServers.find(s => s.id === 'vidlink' || s.id === 'one23embed') || availableServers[0];
           return seriesHindi;
         }
@@ -1032,13 +1034,13 @@ export default function PlayerModal({ item, onClose, preferredServerId, isHindiP
       }
 
       if (newMode === 'hindi') {
-        const hindiMirror = isSeries
+        const hindiMirror = (isSeries || isLuciferTitle)
           ? (availableServers.find(s => s.id === 'vidlink' || s.id === 'one23embed' || s.id === 'vidsrc_pm') || availableServers[0])
-          : (availableServers.find(s => s.id === 'vidlink' || s.id === 'nxsha' || s.id === 'one23embed' || s.id === 'tellyhd' || s.id === 'hdmovie2' || s.id === 'tgvid') || availableServers[0]);
+          : (availableServers.find(s => s.id === 'vidlink' || s.id === 'one23embed' || s.id === 'tgvid' || s.id === 'multiembed' || s.id === 'nxsha') || availableServers[0]);
         return hindiMirror;
       }
       if (newMode === 'sub') {
-        const subMirror = availableServers.find(s => s.id === 'vidlink' || s.id === 'vidbolt' || s.id === 'aniwave' || s.id === 'vidup' || s.id === 'vidsrc_pm') || availableServers[0];
+        const subMirror = availableServers.find(s => s.id === 'vidlink' || s.id === 'aniwave' || s.id === 'vidsrc_pm') || availableServers[0];
         return subMirror;
       }
       const evaluation = evaluateServers({
@@ -1046,6 +1048,7 @@ export default function PlayerModal({ item, onClose, preferredServerId, isHindiP
         audioMode: newMode,
         isAnime,
         isHanime,
+        isSeries: isSeries || isLuciferTitle,
         tmdbId: resolvedTmdbId
       });
       const prevRank = evaluation.rankedServers.find((r) => r.server.id === prevSrv?.id);
@@ -2644,7 +2647,7 @@ export default function PlayerModal({ item, onClose, preferredServerId, isHindiP
                             <button
                               onClick={() => {
                                 if (audioMode === 'hindi') {
-                                  const hindiServer = evaluateServers({ servers: availableServers, audioMode: 'hindi', isAnime, isHanime, tmdbId: resolvedTmdbId }).bestServer || availableServers[0];
+                                  const hindiServer = evaluateServers({ servers: availableServers, audioMode: 'hindi', isAnime, isHanime, isSeries: isSeries || isLuciferTitle, tmdbId: resolvedTmdbId }).bestServer || availableServers[0];
                                   setSelectedServer(hindiServer);
                                 }
                                 setPlayerMode('stream');

@@ -27,14 +27,7 @@ export const FurinaMascot = ({ onOpenSearch, onOpenOracle, onOpenJukebox, onPick
   const [isWiping, setIsWiping] = useState(false);
   const lastTapTimeRef = useRef(0);
 
-  useEffect(() => {
-    // Show bubble on desktop after a brief delay
-    if (typeof window !== 'undefined' && window.innerWidth >= 768) {
-      const timer = setTimeout(() => setShowBubble(true), 1500);
-      return () => clearTimeout(timer);
-    }
-  }, []);
-
+  // The bubble only opens when the user taps the mascot, so it never covers content uninvited.
   useEffect(() => {
     const timer = setInterval(() => {
       setQuoteIndex((prev) => (prev + 1) % FURINA_QUOTES.length);
