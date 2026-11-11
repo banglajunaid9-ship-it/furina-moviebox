@@ -514,7 +514,7 @@ export default function PlayerModal({ item, onClose, preferredServerId, isHindiP
   const iframeLoadedRef = useRef(false);
   const rescueAttemptsRef = useRef(0);
 
-  // Silent Auto-Rescue (3.5s Watchdog): Auto-failover to next fastest mirror on timeout or hang
+  // Silent Auto-Rescue (9.5s Watchdog): Network-friendly buffer allowance preventing premature switching on mobile/slow nets
   useEffect(() => {
     iframeLoadedRef.current = false;
     setIframeLoading(true);
@@ -526,7 +526,7 @@ export default function PlayerModal({ item, onClose, preferredServerId, isHindiP
       setIframeLoading(false);
       // If still loading on a non-custom stream and not manually pinned, auto-failover silently
       if (playerMode === 'stream' && !isCustomMovie && !manualPickRef.current) {
-        if (rescueAttemptsRef.current < 3) {
+        if (rescueAttemptsRef.current < 2) {
           rescueAttemptsRef.current += 1;
           const next = nextBestServer({
             servers: availableServers,
@@ -534,6 +534,7 @@ export default function PlayerModal({ item, onClose, preferredServerId, isHindiP
             audioMode,
             isAnime,
             isHanime,
+            isSeries: isSeries || isLuciferTitle,
             tmdbId: resolvedTmdbId
           });
           if (next && next.id !== selectedServer?.id) {
@@ -542,9 +543,9 @@ export default function PlayerModal({ item, onClose, preferredServerId, isHindiP
           }
         }
       }
-    }, 3500);
+    }, 9500);
     return () => clearTimeout(timer);
-  }, [selectedServer?.id, season, episode, audioMode, playerMode, isCustomMovie, availableServers, isAnime, isHanime, resolvedTmdbId]);
+  }, [selectedServer?.id, season, episode, audioMode, playerMode, isCustomMovie, availableServers, isAnime, isHanime, resolvedTmdbId, isSeries, isLuciferTitle]);
 
   // Furina uBlock Ad-Shield Pro & AI Server Selection
   const [adShieldActive, setAdShieldActive] = useState(() => isAdBlockEnabled());
@@ -667,12 +668,13 @@ export default function PlayerModal({ item, onClose, preferredServerId, isHindiP
     }
   }, [availableServers, selectedServer, audioMode, isAnime, isHanime, resolvedTmdbId, playerMode]);
 
-  // On open: probe hosts in the background to warm cache without tearing down active playback
+  // On open: defer probing hosts in the background until active playback handshake is established
   useEffect(() => {
     if (!hasOnlineStream) return undefined;
-    let cancelled = false;
-    probeServers(availableServers, resolvedTmdbId).catch(() => {});
-    return () => { cancelled = true; };
+    const timer = setTimeout(() => {
+      probeServers(availableServers, resolvedTmdbId).catch(() => {});
+    }, 4000);
+    return () => clearTimeout(timer);
   }, [availableServers, hasOnlineStream, resolvedTmdbId]);
 
   // Auto-clear loading spinner quickly so video controls and stream are interactive

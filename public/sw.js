@@ -1,5 +1,5 @@
 // Furina MovieBox Service Worker — PWA & Offline App Shell
-const CACHE_NAME = 'furina-moviebox-v20-multi-dub-collision-fix';
+const CACHE_NAME = 'furina-moviebox-v21-net-latency-fix';
 const STATIC_ASSETS = [
   './manifest.json',
   './favicon.svg',

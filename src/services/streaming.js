@@ -27,31 +27,10 @@ export const SERVERS = [
     }
   },
   {
-    id: 'vidsrc_net',
-    aliasIds: ['vidsrcnet', 'vidup'],
-    name: '[ 👑 Server 2 (VidSrc Net 4K) ] VidSrc Net Direct (Ultra-Fast 0.5s CDN • 4K UHD)',
-    shortName: '[ 👑 Server 2 (VidSrc Net) ]',
-    badge: 'VidSrc Direct • 4K UHD',
-    statusBadge: '⚡ 4K',
-    color: 'bg-cyan-500/20 text-cyan-300 border-cyan-500/40',
-    supportedAudios: ['english', 'sub', 'hindi'],
-    supportsAudioSwitching: true,
-    getMovieUrl: (tmdbId) => {
-      const cleanId = String(tmdbId).replace(/[^0-9]/g, '') || '533535';
-      return `https://vidsrc.net/embed/movie/${cleanId}`;
-    },
-    getTvUrl: (tmdbId, s = 1, e = 1) => {
-      const cleanId = String(tmdbId).replace(/[^0-9]/g, '') || '66732';
-      const seasonNum = Math.max(1, Number(s) || 1);
-      const epNum = Math.max(1, Number(e) || 1);
-      return `https://vidsrc.net/embed/tv/${cleanId}/${seasonNum}/${epNum}`;
-    }
-  },
-  {
     id: 'framex',
     aliasIds: ['framextv_direct', 'framex_tech', 'framextv_cc'],
-    name: '[ 🌐 Server 3 (FrameX Direct) ] FrameX Native CDN (Direct High-Speed • 4K)',
-    shortName: '[ 🌐 Server 3 (FrameX) ]',
+    name: '[ 🌐 Server 2 (FrameX Native CDN) ] FrameX Native CDN (Direct High-Speed • 4K)',
+    shortName: '[ 🌐 Server 2 (FrameX) ]',
     badge: 'FrameX Direct • 4K',
     statusBadge: '🟢 Fast',
     color: 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40',
@@ -66,6 +45,27 @@ export const SERVERS = [
       const seasonNum = Math.max(1, Number(s) || 1);
       const epNum = Math.max(1, Number(e) || 1);
       return `https://framextv.cc/embed/tv/${cleanId}/${seasonNum}/${epNum}`;
+    }
+  },
+  {
+    id: 'vidsrc_net',
+    aliasIds: ['vidsrcnet', 'vidup'],
+    name: '[ 👑 Server 3 (VidSrc Net 4K) ] VidSrc Net Direct (Ultra-Fast 0.5s CDN • 4K UHD)',
+    shortName: '[ 👑 Server 3 (VidSrc Net) ]',
+    badge: 'VidSrc Direct • 4K UHD',
+    statusBadge: '⚡ 4K',
+    color: 'bg-cyan-500/20 text-cyan-300 border-cyan-500/40',
+    supportedAudios: ['english', 'sub', 'hindi'],
+    supportsAudioSwitching: true,
+    getMovieUrl: (tmdbId) => {
+      const cleanId = String(tmdbId).replace(/[^0-9]/g, '') || '533535';
+      return `https://vidsrc.net/embed/movie/${cleanId}`;
+    },
+    getTvUrl: (tmdbId, s = 1, e = 1) => {
+      const cleanId = String(tmdbId).replace(/[^0-9]/g, '') || '66732';
+      const seasonNum = Math.max(1, Number(s) || 1);
+      const epNum = Math.max(1, Number(e) || 1);
+      return `https://vidsrc.net/embed/tv/${cleanId}/${seasonNum}/${epNum}`;
     }
   },
   {
